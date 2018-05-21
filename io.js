@@ -77,9 +77,11 @@ io.on('connection', function(socket) {
 
 			if (!node.reserved) {
 				node.memory.total = Math.ceil((data.totalmem / Math.pow(1024, 2)) / 256) * 256;
-				node.memory.used = data.memory.used;
+                node.memory.used = data.memory.used;
+                node.memory.avalibale = data.memory.avalibale;
 				node.cores.used = data.cores.used;
-				node.cores.count = data.cores.count;
+                node.cores.count = data.cores.count;
+                node.cores.avalibale = data.cores.avalibale;
 			} else {
 				node.reserved = false;
 			}
