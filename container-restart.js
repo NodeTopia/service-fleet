@@ -44,9 +44,11 @@ kue.jobs.process('fleet.container.restart', 999, function(job, done) {
 				return done(err);
 			}
 
-			kue.fleet.start({
+			kue.fleet.container.start({
 				container : container.config
-			}, onStart);
+			}).then(function (data) {
+                onStart(null, data)
+            }).catch(onStart);
 
 		}
 

@@ -38,7 +38,7 @@ kue.jobs.process('fleet.container.stop', 999, function(job, done) {
 		function onSave(err) {
 			if (err)
 				return done(errors.mongoose(err));
-			socket.emit('stop', container.id, function(error) {
+			socket.emit('stop', container.id||container.uid, function(error) {
 				if (error) {
 					container.state = 'CRASHED';
 					container.statusCode = 127;

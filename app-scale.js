@@ -97,9 +97,11 @@ kue.jobs.process('fleet.app.scale', 999, function(job, done) {
 				function stop(cb) {
 					async.parallel(remove.map(function(container) {
 						return function(next) {
-							kue.fleet.stop({
+                            kue.fleet.container.stop({
 								container : container._id
-							}, next);
+							}).then(function (data) {
+                                next(null, data)
+                            }).catch(next);
 						};
 					}), function(errs, res) {
 						handleResponce.stop(errs, res);
@@ -110,7 +112,9 @@ kue.jobs.process('fleet.app.scale', 999, function(job, done) {
 				function start(cb) {
 					async.parallel(add.map(function(formation) {
 						return function(next) {
-							kue.fleet.start(formation, next);
+                            kue.fleet.container.start(formation).then(function (data) {
+                                next(null, data)
+                            }).catch(next);
 						};
 					}), function(errs, res) {
 
