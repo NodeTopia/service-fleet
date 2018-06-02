@@ -33,7 +33,7 @@ async function removeUsage(container) {
                     'cpu': -container.config.size.cpu,
                     'memory': -container.config.size.memory
                 }
-            },function(){
+            }, function () {
 
             });
         }
@@ -43,7 +43,7 @@ async function removeUsage(container) {
 }
 
 function crashStop(container) {
-    console.log('statusCode',container.statusCode)
+    console.log('statusCode', container.statusCode)
     if (container.is_stopping) {
         return;
     }
@@ -51,7 +51,7 @@ function crashStop(container) {
         return;
     }
 
-    if (container.restartable) {
+    if (container.restartable && !container.evicted) {
         return kue.fleet.container.restart({
             id: container._id
         });
@@ -71,6 +71,37 @@ function zombie(container) {
     }
 }
 
+function evicted(container) {
+    if (container.restartable && container.evicted) {
+        return kue.fleet.container.restart({
+            id: container._id
+        });
+    }
+}
+
+async function initializing(container) {
+    try {
+        let app = await mongoose.App.findOne({
+            _id: container.reference
+        })
+        if (app) {
+            await mongoose.Quota.update({_id: app.organization.quota._id}, {
+                $inc: {
+                    'processes': 1,
+                    'cpu': size.cpu,
+                    'memory': size.memory
+                }
+            });
+        }
+    } catch (e) {
+
+    }
+}
+
+kue.events.on('fleet.state.initializing', initializing);
+
+kue.events.on('fleet.state.evicted', evicted);
+
 kue.events.on('fleet.state.zombie', zombie);
 
 kue.events.on('fleet.state.crashed', crashStop);
@@ -78,3 +109,4 @@ kue.events.on('fleet.state.stopped', crashStop);
 
 kue.events.on('fleet.state.crashed', removeUsage);
 kue.events.on('fleet.state.stopped', removeUsage);
+kue.events.on('fleet.state.error', removeUsage);

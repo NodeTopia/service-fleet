@@ -10,7 +10,7 @@ var helpers = require('nodetopia-lib/helpers');
 var io = require('./io');
 var utils = require('./utils');
 
-var minioClient = new Minio(nconf.get('s3'));
+var minioClient = new Minio.Client(nconf.get('s3'));
 
 kue.jobs.process('fleet.app.scale', 999, function(job, done) {
 

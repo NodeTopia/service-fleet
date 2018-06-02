@@ -6,16 +6,76 @@ var kue = require('nodetopia-kue');
 var io = require('./io');
 var utils = require('./utils');
 
+getZone = function (options, cb) {
+    let query = {};
+
+    query = {
+        $or: options.zones.map(function (zone) {
+            return {
+                zone: zone.name
+            };
+        }),
+        'memory.avalibale': {
+            $gte: options.size.memory
+        },
+        'cores.avalibale': {
+            $gte: options.size.cpu
+        },
+        closing: false,
+        multitenant: true
+    };
+    if (options.size.dedicated) {
+        query.multitenant = false;
+        query['memory.used'] = 0;
+    }
+    if (options.reserved) {
+        query.reserved = true;
+    } else {
+        query.is_active = true;
+    }
+
+    if (options.exclude.length > 0) {
+        query._id = {$ne: options.exclude}
+    }
+
+    return new Promise(function (resolve, reject) {
+
+        mongoose.Node.findOne(query, null, {
+            sort: {
+                last_used: 1
+            }
+        }, function (err, node) {
+            if (err) {
+                return reject(err);
+            }
+            if (!node) {
+                return reject();
+            }
+            node.last_used = Date.now();
+            node.save(function () {
+                resolve(node);
+            });
+        });
+    })
+
+}
+
+
+let last = Date.now()
 kue.jobs.process('fleet.allocate.resources', 1, async function (job, done) {
-    var size = job.data.size;
-    var zones = job.data.zones;
+    let start = Date.now()
+
+    let {size, zones, tags = [], exclude = []} = job.data;
+
 
     let err,
         node;
 
-    [err, node] = await utils.to(mongoose.Node.getZone({
+    [err, node] = await utils.to(getZone({
         size: size,
-        zones: zones
+        zones: zones,
+        tags: tags,
+        exclude: exclude
     }));
 
     if (err) {
@@ -23,8 +83,6 @@ kue.jobs.process('fleet.allocate.resources', 1, async function (job, done) {
     } else if (!node) {
         return done(new Error('no node found'))
     }
-
-
 
 
     try {
@@ -37,6 +95,9 @@ kue.jobs.process('fleet.allocate.resources', 1, async function (job, done) {
                 'cores.avalibale': -size.cpu
             }
         });
+
+        console.log(`fleet.allocate.resources: ${Date.now() - start}ms - ${start - last}ms`);
+        last = start
         done(null, {
             node: node,
             size: size

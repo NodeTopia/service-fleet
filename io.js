@@ -8,13 +8,32 @@ var io = socketio(nconf.get('fleet:io:port'));
 
 module.exports = io;
 
+
+/*
+ *
+ */
+io.static = {
+    start: function (socket, container) {
+        return new Promise(function (resolve, reject) {
+            socket.emit('start', container, function (err, con) {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(con);
+                }
+            })
+        })
+    }
+}
+
+
 io.use(function (socket, next) {
 
     var handshakeData = socket.request;
     var id = handshakeData._query.id;
     var token = handshakeData._query.token;
 
-    if (token == nconf.get('fleet:io:token')) {
+    if (token === nconf.get('fleet:io:token')) {
         mongoose.Node.findOne({
             id: id
         }, function (err, node) {
@@ -40,31 +59,6 @@ io.use(function (socket, next) {
 
 io.on('connection', function (socket) {
 
-
-    function updateResources() {
-        //return;
-        socket.emit('resources', async function (err, data) {
-            try {
-                let node = await mongoose.Node.findOne({
-                    socketId: socket.id
-                })
-                //node.memory.total = Math.ceil((data.totalmem / Math.pow(1024, 2)) / 256) * 256;
-                node.memory.used = data.memory.used;
-                node.memory.avalibale = data.memory.avalibale;
-                node.cores.used = data.cores.used;
-                node.cores.count = data.cores.count;
-                node.cores.avalibale = data.cores.avalibale;
-                node.cores.loadavg = data.cores.loadavg;
-                console.log(node.id, data.containers.count, node.memory.avalibale.toFixed(2), node.cores.avalibale)
-                await node.save();
-            } catch (e) {
-                console.log(e)
-            }
-
-        })
-    }
-
-    let resourceTimmer = setInterval(updateResources, 10000)
 
     socket.on('disconnect', function () {
         mongoose.Node.findOne({
@@ -119,7 +113,6 @@ io.on('connection', function (socket) {
         });
     });
     socket.once('exit', function (data) {
-        clearImmediate(resourceTimmer)
         mongoose.Node.findOne({
             socketId: socket.id
         }, function (err, node) {
@@ -147,12 +140,16 @@ io.on('connection', function (socket) {
             }
 
             container.state = state;
-
+            let update = {
+                state: state
+            }
+            if (state === 'EVICTED') {
+                container.evicted = update.evicted = true;
+                container.evicted_at = update.evicted_at = Date.now();
+            }
             mongoose.Container.update({
                 uid: info.uid
-            }, {
-                state: state
-            }, function (err) {
+            }, update, function (err) {
                 if (err)
                     return kue.events.emit('fleet.error', err);
                 console.log(state)
@@ -201,4 +198,32 @@ io.on('connection', function (socket) {
         });
     });
 
+    socket.on('stats', function (id, stats) {
+        kue.events.emit('fleet.container.stats.' + id, id, stats);
+    });
+    socket.on('heartbeat', async function (data) {
+        try {
+
+
+            let node = await mongoose.Node.update({socketId: socket.id}, {
+                $set: {
+                    memory: {
+                        used: data.memory.used,
+                        avalibale: data.memory.avalibale
+                    },
+                    cores: {
+                        used: data.cores.used,
+                        avalibale: data.cores.avalibale,
+                        count: data.cores.count,
+                        loadavg: data.cores.loadavg
+                    }
+                }
+            })
+
+            console.log(socket.id, data.containers.count, data.memory.avalibale.toFixed(2), data.cores.avalibale, data.cores.loadavg[1])
+
+        } catch (e) {
+            console.log(e)
+        }
+    });
 });

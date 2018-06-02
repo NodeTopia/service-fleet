@@ -18,7 +18,7 @@
 	"homepage": "https://github.com/NodeTopia/service-fleet#readme",
 	"dependencies": {
 		"async": "^2.6.1",
-		"minio": "^2.0.3",
+		"minio": "^5.0.2",
 		"moniker": "^0.1.2",
 		"nconf": "^0.10.0",
 		"node-uuid": "^1.4.8",

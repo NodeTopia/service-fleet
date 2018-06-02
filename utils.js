@@ -5,7 +5,7 @@ var Minio = require('minio');
 var Moniker = require('moniker');
 
 
-var minioClient = new Minio(nconf.get('s3'));
+var minioClient = new Minio.Client(nconf.get('s3'));
 
 
 var Moniker = Moniker.generator([Moniker.adjective, Moniker.noun]);
@@ -105,7 +105,7 @@ utils.testNodeResources = function (node, size) {
 };
 
 utils.formationConfig = function (docs, unit) {
-    if (unit.type == 'web') {
+    if (unit.type === 'web') {
         docs.env.env.PORT = 8080;
     }
 
@@ -114,6 +114,11 @@ utils.formationConfig = function (docs, unit) {
         type: unit.type,
         container: {
             logs: nconf.get('logs'),
+            stats: {
+                host: nconf.get('stats:host'),
+                port: nconf.get('stats:port'),
+                key: docs.app.metricSession
+            },
             logSession: docs.app.logSession,
             metricSession: docs.app.metricSession,
             source: 'app',
@@ -127,7 +132,7 @@ utils.formationConfig = function (docs, unit) {
             username: docs.app.organization.name,
             size: unit.size,
             zones: docs.app.organization.quota.zones,
-            exclude : ['registry.system.nodetopia.com/cedar:runner'],
+            exclude: ['registry.system.nodetopia.com/cedar:runner'],
             image: 'registry.system.nodetopia.com/cedar:runner',
             ports: unit.type == 'web' ? ['8080/tcp'] : [],
             cmd: unit.cmd
