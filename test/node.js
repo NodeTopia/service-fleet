@@ -90,7 +90,7 @@ describe('Node', function () {
         this.timeout(15000);
         before(async function () {
             try {
-                await jerkie.call('fleet.container.start', config())
+                container = await jerkie.call('fleet.container.start', config())
             } catch (err) {
                 console.log(err)
             }
@@ -114,7 +114,8 @@ describe('Node', function () {
             }
         });
         it('should return result.running.length=0', async function () {
-            let result = await jerkie.call('fleet.node.drain', {node: 'node-01'})
+            let result = await jerkie.call('fleet.node.drain', {node: 'node-01'});
+            console.log(result)
             assert.equal(result.moved.length, 1);
             assert.equal(result.moved[0].node.id, 'node-01');
             container = result.moved[0].newContainer;

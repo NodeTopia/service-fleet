@@ -33,7 +33,7 @@ routes.push({
             } else if (node.closing) {
                 return reject(new Error('Node already cordoned'));
             }
-            node.closing = true;
+            node.cordoned = true;
             await node.save();
         } catch (err) {
             return reject(err)

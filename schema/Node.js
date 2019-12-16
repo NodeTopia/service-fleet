@@ -4,19 +4,10 @@ var mongoose = Jerkie.mongoose;
 var Schema = mongoose.Schema;
 
 var NodeSchema = new Schema({
-    dockerId: {
-        type: String
-    },
     socketId: {
         type: String
     },
     address: {
-        type: String
-    },
-    region: {
-        type: String
-    },
-    region: {
         type: String
     },
     region: {
@@ -29,9 +20,6 @@ var NodeSchema = new Schema({
         type: String
     },
     id: {
-        type: String
-    },
-    url: {
         type: String
     },
     zone: {
@@ -72,6 +60,10 @@ var NodeSchema = new Schema({
         type: Boolean,
         'default': false
     },
+    cordoned: {
+        type: Boolean,
+        'default': false
+    },
     reserved: {
         type: Boolean,
         'default': false
@@ -84,13 +76,14 @@ NodeSchema.pre('save', function (next) {
 });
 
 NodeSchema.index({
-    'memory.avalibale':1,
-    'memory.avalibale':1,
-    zone:1,
-    closing:1,
-    multitenant:1,
-    reserved:1,
-    is_active:1,
-    last_used:1
+    'memory.avalibale': 1,
+    'memory.avalibale': 1,
+    zone: 1,
+    closing: 1,
+    cordoned: 1,
+    multitenant: 1,
+    reserved: 1,
+    is_active: 1,
+    last_used: 1
 })
 module.exports = mongoose.model('Node', NodeSchema);

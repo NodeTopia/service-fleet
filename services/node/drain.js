@@ -14,6 +14,15 @@ routes.push({
         version: 1,
         concurrency: 100
     },
+    checks: {
+        node: {
+            type: "string",
+            length: 24
+        },
+        force: {
+            type: "boolean"
+        }
+    },
     service: async function (resolve, reject) {
 
         let ctx = this;
@@ -36,7 +45,7 @@ routes.push({
                 let err = new Error('Node not found for "' + fromNode + '" no need to stop');
                 return reject(err);
             } else if (!node.closing) {
-               // return reject(new Error('Node needs to be cordoned'));
+                // return reject(new Error('Node needs to be cordoned'));
             }
             containers = await schema.Container.find({
                 node: node._id,
@@ -57,7 +66,12 @@ routes.push({
         for (let container of containers) {
             try {
                 result.push(await ctx.call('fleet.container.move', {id: container._id}))
-            } catch (err) {
+            } catch (error) {
+                let err = {};
+                Object.getOwnPropertyNames(error).forEach(function (key) {
+                    err[key] = error[key];
+                }, this);
+                console.log(err)
                 result.push(err)
             }
         }

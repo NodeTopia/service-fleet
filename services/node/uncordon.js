@@ -30,10 +30,10 @@ routes.push({
             });
             if (!node) {
                 return reject(new Error('Node not found for "' + nodeNameID + '" no need to stop'));
-            } else if (!node.closing) {
+            } else if (!node.cordoned) {
                 return reject(new Error('Node already uncordoned'));
             }
-            node.closing = false;
+            node.cordoned = false;
             await node.save();
         } catch (err) {
             return reject(err)

@@ -46,7 +46,7 @@ routes.push({
             resolve(node)
         },
         toNodeModel: async function (resolve, reject) {
-            let toNodeModel
+            let toNodeModel;
             if (this.data.node) {
                 try {
                     toNodeModel = await this.schema.Node.findOne({
@@ -56,11 +56,11 @@ routes.push({
                         return reject(new Error('Node not found for "' + this.data.toNode + '" no need to stop'));
                     }
                 } catch (err) {
-                    return reject(err)
+                    return reject(err);
                 }
             }
 
-            resolve(toNodeModel)
+            resolve(toNodeModel);
         }
     },
     service: async function (resolve, reject) {

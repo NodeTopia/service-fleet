@@ -3,7 +3,6 @@ module.exports = function (options) {
     let schema = this.schema;
 
     let query = {};
-
     query = {
         $or: options.zones.map(function (zone) {
             return {
@@ -17,6 +16,7 @@ module.exports = function (options) {
             $gte: options.size.cpu
         },
         closing: false,
+        cordoned: false,
         multitenant: true
     };
     if (options.size.dedicated) {
@@ -32,10 +32,9 @@ module.exports = function (options) {
     if (options.exclude.length > 0) {
         query.id = {$ne: options.exclude}
     }
-
     return new Promise(function (resolve, reject) {
 
-        schema.Node.findOne(query, null, {
+        schema.Node.findOne({}, null, {
             sort: {
                 last_used: 1
             }

@@ -81,6 +81,11 @@ module.exports = function (socket) {
                 return ctx.broadcast('fleet.error', new Error('container not found for ' + info.uid));
             }
 
+            if (container.shortLived && state === 'CRASHED') {
+                state = 'ENDED'
+            }
+
+
             container.state = state;
 
             let update = {
@@ -91,6 +96,7 @@ module.exports = function (socket) {
                 container.evicted = update.evicted = true;
                 container.evicted_at = update.evicted_at = Date.now();
             }
+
             schema.Container.update({
                 uid: info.uid
             }, update, function (err) {
@@ -132,6 +138,9 @@ module.exports = function (socket) {
                     return;//ignore
                 }
 
+                if(container.type==='build'){
+                    ctx.broadcast(`fleet.build.${info.uid}`, container);
+                }
 
                 if (container.ports.length > 0) {
                     try {

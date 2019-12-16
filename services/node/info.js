@@ -9,7 +9,7 @@ let routes = [];
 
 routes.push({
     meta: {
-        method: 'POST',
+        method: 'GET',
         path: 'node.info.all',
         version: 1,
         concurrency: 100
@@ -42,24 +42,72 @@ routes.push({
         version: 1,
         concurrency: 100
     },
+    params: {
+        node: {
+            type: "string",
+            length: 24
+        }
+    },
     service: async function (resolve, reject) {
 
         let ctx = this;
         let data = ctx.data;
         let schema = ctx.schema;
 
-        let {node: idOrName} = data;
+        let {node: id} = data;
 
         let node;
 
         try {
             node = await schema.Node.findOne({
-                $or: [{name: idOrName}, {id: idOrName}]
+                _id: id
             });
         } catch (err) {
             return reject(err)
         }
+        if (!node) {
+            return reject(new Error('Node not found for "' + id + '" no need to stop'));
+        }
+        resolve(node)
 
+    },
+    events: {}
+});
+
+routes.push({
+    meta: {
+        method: 'POST',
+        path: 'node.info.name',
+        version: 1,
+        concurrency: 100
+    },
+    params: {
+        node: {
+            type: "string",
+            min: 3,
+            max: 24
+        }
+    },
+    service: async function (resolve, reject) {
+
+        let ctx = this;
+        let data = ctx.data;
+        let schema = ctx.schema;
+
+        let {node: name} = data;
+
+        let node;
+
+        try {
+            node = await schema.Node.findOne({
+                name: name
+            });
+        } catch (err) {
+            return reject(err)
+        }
+        if (!node) {
+            return reject(new Error('Node not found for "' + name + '" no need to stop'));
+        }
         resolve(node)
 
     },

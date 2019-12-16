@@ -12,7 +12,7 @@ routes.push({
         method: 'POST',
         path: 'allocate.resources',
         version: 1,
-        concurrency: 1
+        concurrency: 1100
     },
     service: async function (resolve, reject) {
 
@@ -21,7 +21,7 @@ routes.push({
         let data = ctx.data;
         let schema = ctx.schema;
 
-        let {size, zones, tags = [], exclude = []} = data;
+        let {size, zones = [], tags = [], exclude = []} = data;
 
 
         let err,
@@ -33,7 +33,6 @@ routes.push({
             tags: tags,
             exclude: exclude
         }));
-
         if (err) {
             return reject(err)
         } else if (!node) {
