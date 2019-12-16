@@ -19,7 +19,7 @@
 	"dependencies": {
 		"jerkie": "0.0.8",
 		"mocha": "^5.2.0",
-		"mongoose": "5.1.8",
+		"mongoose": "5.7.5",
 		"node-uuid": "^1.4.8",
 		"password-generator": "^2.2.0",
 		"socket.io": "^2.1.1"
